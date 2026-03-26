@@ -1,7 +1,8 @@
 import userModel from "../models/userModels.js";
 import jwt from 'jsonwebtoken';
-import 'dotenv/config';
+
 import bcrypt from 'bcrypt';
+import transporter from "../config/nodemailer.js";
 
 export const Register = async (req,res)=>{
     const {name,email,password} = req.body;
@@ -24,6 +25,14 @@ export const Register = async (req,res)=>{
 
 
     })
+    const mailOptions={
+        from: process.env.SENDER_EMAIL,
+        to: email,
+        subject:'Welcome to my website ',
+        text:'This is auto generated mail, reply and i will sue you !',
+
+    }
+    await transporter.sendMail(mailOptions);
      res.json({success:true});
         
     } catch (error) {
@@ -65,11 +74,24 @@ export const login =async (req,res)=>{
 
 
     } catch (error) {
-        res.json({success:false,message:error.message});
+       return res.json({success:false,message:error.message});
         
     }
 
 }
-export const logout = async (req,res)=>{
-    
+
+export const logout = async(req,res)=>{
+    try {
+        res.clearCookie('token',{
+            httpOnly:true,
+            secure: process.env.NODE_ENV==='production',
+            sameSite:process.env.NODE_ENV==='production'?'none':'strict',
+        })
+        res.json({success:true,message:'user logged out'})
+        
+    } catch (error) {
+       return res.json({success:false,message: error.message})
+        
+    }
+
 }
